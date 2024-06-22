@@ -1,3 +1,5 @@
+//hjfhjhmn
+import 'package:db4/paid_wg_meal.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
@@ -34,7 +36,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
+  String? _usern;
   TextEditingController emailController = TextEditingController();
   Database? _database;
   @override
@@ -44,8 +46,20 @@ class _MyHomePageState extends State<MyHomePage> {
     Future.delayed(Duration(seconds: 3), () {
       _showEmailPopup();
     });
+    _loadUsern();
   }
-  
+  Future<void> _loadUsern() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _usern = prefs.getString('usern');
+    });
+  }
+
+  Future<void> _saveUsern(String usern) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('usern', usern);
+  }
+
   void dispose() {
     super.dispose();
   }
@@ -71,7 +85,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       if (email.isNotEmpty) {
                         bool emailExists = await checkEmailExists(email);
                         if (emailExists) {
-                          sendMail(recipientEmail: emailController.text.toString(),mailMessage: 'u are using gritfit!!!');
+                    //      sendMail(recipientEmail: emailController.text.toString(),mailMessage: 'u are using gritfit!!!');
+                          sendEmail(
+                            emailController.text,
+                            'Payment successful',
+                            'Welcome! you have subscibed the premium package of GritFit',
+                          );
                           getcurrentweightgainuser(emailController.text.toString());
                           String Email = emailController.text.toString();
                           String? name = await getNameFromEmail(Email);
@@ -156,7 +175,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final String? usern=ModalRoute.of(context)?.settings.arguments as String?;
-
+    if (usern != null ) {
+      _saveUsern(usern);
+      setState(() {
+        _usern = usern;
+      });
+    }
     // Retrieve email from the controller
     final String email = emailController.text.toString();
 
@@ -233,19 +257,6 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       else{
         print('gender cant fetched');
-      }
-    }
-    Future<String?> getActivityLevel() async {
-      String error='error!!!!!!!!!!!!!!!!!!!!';
-       String? activity_level= null;
-      if (activity_level == null) {
-        activity_level= await getActivityLevelFromEmail(email);
-        if(activity_level!=null){
-          return activity_level;
-        }
-      }
-      else{
-        return error;
       }
     }
     return FutureBuilder<String?>(
@@ -343,7 +354,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                () {
                                  Navigator.of(context).push(
                                    MaterialPageRoute(
-                                       builder: (BuildContext context) => meal(),
+                                       builder: (BuildContext context) => pmeal(),
                                        settings: RouteSettings(arguments: email)
                                    ),
                                  );
@@ -353,7 +364,12 @@ class _MyHomePageState extends State<MyHomePage> {
                            'StepCounter',
                            'assets/images/walk.jpg',
                                () {
-                             navigateToPage(step());
+                                 Navigator.of(context).push(
+                                   MaterialPageRoute(
+                                       builder: (BuildContext context) => StepCounter(),
+                                       settings: RouteSettings(arguments: email)
+                                   ),
+                                 );
                            },
                          ),
                        ],
@@ -605,40 +621,75 @@ class _MyHomePageState extends State<MyHomePage> {
     return activity_level;
   }
 
-  void sendMail({
-    required String recipientEmail,
-    required String mailMessage,
-  }) async {
-    // change your email here
-    String username = emailController.text.toString();
-    // change your password here
-    String password = 'uujedrnwaxeikqzu';
+//   void sendMail({
+//     required String recipientEmail,
+//     required String mailMessage,
+//   }) async {
+//     // change your email here
+//     String username = emailController.text.toString();
+//     // change your password here
+//     String password = 'uujedrnwaxeikqzu';
+//     final smtpServer = gmail(username, password);
+//     final message = Message()
+//       ..from = Address(username, 'Mail Service')
+//       ..recipients.add(recipientEmail)
+//       ..subject = 'Mail '
+//       ..text = 'Message: $mailMessage';
+//
+//     try {
+//       await send(message, smtpServer);
+//       ScaffoldMessenger.of(context).showSnackBar(
+//               const SnackBar(
+//                  content: Text('E-mail is sent on your account.'),
+//                ),
+//              );
+//     } catch (e) {
+//       if (kDebugMode) {
+//         print(e.toString());
+//         print('error in sending email');
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Something went wrong ,cant send email'),
+//           ),
+//         );
+//       }
+//     }
+//   }
+
+  Future<void> sendEmail(String recipient, String subject, String message) async {
+    // Replace with your email and password
+    String username = 'agritfit@gmail.com';
+    String password = 'dmehtpvtnacfuhpm';
+
     final smtpServer = gmail(username, password);
-    final message = Message()
-      ..from = Address(username, 'Mail Service')
-      ..recipients.add(recipientEmail)
-      ..subject = 'Mail '
-      ..text = 'Message: $mailMessage';
+
+    final emailMessage = Message()
+      ..from = Address(username, 'GritFit')
+      ..recipients.add(recipient)
+      ..subject = subject
+      ..text = message;
 
     try {
-      await send(message, smtpServer);
+      final sendReport = await send(emailMessage, smtpServer);
+      print('Message sent: ' + sendReport.toString());
       ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                 content: Text('E-mail is sent on your account.'),
-               ),
-             );
-    } catch (e) {
-      if (kDebugMode) {
-        print(e.toString());
-        print('error in sending email');
+             const SnackBar(
+                  content: Text('E-mail is sent on your account.'),
+                ),
+              );
+    } on MailerException catch (e) {
+      print('Message not sent.');
+      for (var p in e.problems) {
+        print('Problem: ${p.code}: ${p.msg}');
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Something went wrong ,cant send email'),
-          ),
-        );
+             content: Text('Something went wrong ,cant send email'),
+           ),
+         );
       }
     }
   }
+
 }
 
 
