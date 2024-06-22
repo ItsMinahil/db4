@@ -509,6 +509,152 @@ class WeightGainCalculator {
 
     return dinnerCaloriesNeeded.round();
   }
+  int calculateTotalStepsInPeriod(
+      int currentWeight,
+      int goalWeight,
+      int height,
+      int age,
+      String gender,
+      String activityLevel,
+      {int monthsToReach = 2}
+      ) {
+    double bmr;
+    double heightCm = height * 30.48; // 1 foot = 30.48 centimeters
+
+    // Calculate Basal Metabolic Rate (BMR) based on gender
+    if (gender.toLowerCase() == 'male') {
+      bmr = 88.362 + (13.397 * currentWeight) + (4.799 * heightCm) - (5.677 * age);
+    } else if (gender.toLowerCase() == 'female') {
+      bmr = 447.593 + (9.247 * currentWeight) + (3.098 * heightCm) - (4.330 * age);
+    } else {
+      throw ArgumentError("Invalid gender. Please specify 'male' or 'female'.");
+    }
+
+    // Determine activity level multiplier and average daily steps
+    double selectedActivityLevel;
+    int averageDailySteps;
+
+    if (activityLevel.toLowerCase() == 'sedentary') {
+      selectedActivityLevel = 1.2;
+      averageDailySteps = 5000; // Rough estimate for a sedentary lifestyle
+    } else if (activityLevel.toLowerCase() == 'lightly active') {
+      selectedActivityLevel = 1.375;
+      averageDailySteps = 7500; // Rough estimate for a lightly active lifestyle
+    } else if (activityLevel.toLowerCase() == 'moderately active') {
+      selectedActivityLevel = 1.55;
+      averageDailySteps = 10000; // Rough estimate for a moderately active lifestyle
+    } else if (activityLevel.toLowerCase() == 'very active') {
+      selectedActivityLevel = 1.725;
+      averageDailySteps = 12500; // Rough estimate for a very active lifestyle
+    } else if (activityLevel.toLowerCase() == 'extra active') {
+      selectedActivityLevel = 1.9;
+      averageDailySteps = 15000; // Rough estimate for an extra active lifestyle
+    } else {
+      throw ArgumentError("Invalid activity level. Please specify one of the following: sedentary, lightly active, moderately active, very active, or extra active.");
+    }
+
+    // Calculate daily caloric intake needed to maintain current weight
+    double dailyCaloriesToMaintain = bmr * selectedActivityLevel;
+
+    // Calculate the total calorie surplus needed to gain the desired weight
+    double totalCalorieSurplus = (goalWeight - currentWeight) * 7700;
+
+    // Calculate daily calorie surplus required to achieve the goal weight in the specified time frame
+    int daysInPeriod = monthsToReach * 30;
+    double dailyCalorieSurplus = totalCalorieSurplus / daysInPeriod;
+
+    // Calculate total daily caloric intake needed to reach the goal weight
+    double dailyCaloriesToGainWeight = dailyCaloriesToMaintain + dailyCalorieSurplus;
+
+    // Calculate total calories needed over the period
+    double totalCaloriesNeeded = dailyCaloriesToGainWeight * daysInPeriod;
+
+    // Estimate steps based on total calories and activity level
+    // For simplicity, we assume a linear relationship between calories and steps
+    // We'll use a rough estimate where 1 step burns about 0.04 calories (this can vary widely)
+    double caloriesPerStep = 0.04;
+    int totalStepsNeeded = (totalCaloriesNeeded / caloriesPerStep).round();
+
+    // Calculate daily steps needed using the daily steps function
+    int dailyStepsNeeded = calculateDailyStepsNeeded(currentWeight, goalWeight, height, age, gender, activityLevel);
+
+    // Ensure the total steps over the period equals the daily steps multiplied by days in period
+    int totalStepsFromDaily = dailyStepsNeeded * daysInPeriod;
+
+    // Return the total steps needed over the period
+    return totalStepsNeeded;
+  }
+  int calculateDailyStepsNeeded(
+      int currentWeight,
+      int goalWeight,
+      int height,
+      int age,
+      String gender,
+      String activityLevel,
+      {int monthsToReach = 2}
+      ) {
+    double bmr;
+    double heightCm = height * 30.48; // 1 foot = 30.48 centimeters
+
+    // Calculate Basal Metabolic Rate (BMR) based on gender
+    if (gender.toLowerCase() == 'male') {
+      bmr = 88.362 + (13.397 * currentWeight) + (4.799 * heightCm) - (5.677 * age);
+    } else if (gender.toLowerCase() == 'female') {
+      bmr = 447.593 + (9.247 * currentWeight) + (3.098 * heightCm) - (4.330 * age);
+    } else {
+      throw ArgumentError("Invalid gender. Please specify 'male' or 'female'.");
+    }
+
+    // Determine activity level multiplier and average daily steps
+    double selectedActivityLevel;
+    int averageDailySteps;
+
+    if (activityLevel.toLowerCase() == 'sedentary') {
+      selectedActivityLevel = 1.2;
+      averageDailySteps = 5000; // Rough estimate for a sedentary lifestyle
+    } else if (activityLevel.toLowerCase() == 'lightly active') {
+      selectedActivityLevel = 1.375;
+      averageDailySteps = 7500; // Rough estimate for a lightly active lifestyle
+    } else if (activityLevel.toLowerCase() == 'moderately active') {
+      selectedActivityLevel = 1.55;
+      averageDailySteps = 10000; // Rough estimate for a moderately active lifestyle
+    } else if (activityLevel.toLowerCase() == 'very active') {
+      selectedActivityLevel = 1.725;
+      averageDailySteps = 12500; // Rough estimate for a very active lifestyle
+    } else if (activityLevel.toLowerCase() == 'extra active') {
+      selectedActivityLevel = 1.9;
+      averageDailySteps = 15000; // Rough estimate for an extra active lifestyle
+    } else {
+      throw ArgumentError("Invalid activity level. Please specify one of the following: sedentary, lightly active, moderately active, very active, or extra active.");
+    }
+
+    // Calculate daily caloric intake needed to maintain current weight
+    double dailyCaloriesToMaintain = bmr * selectedActivityLevel;
+
+    // Calculate the total calorie surplus needed to gain the desired weight
+    double totalCalorieSurplus = (goalWeight - currentWeight) * 7700;
+
+    // Calculate daily calorie surplus required to achieve the goal weight in the specified time frame
+    int daysInPeriod = monthsToReach * 30;
+    double dailyCalorieSurplus = totalCalorieSurplus / daysInPeriod;
+
+    // Calculate total daily caloric intake needed to reach the goal weight
+    double dailyCaloriesToGainWeight = dailyCaloriesToMaintain + dailyCalorieSurplus;
+
+    // Calculate total calories needed over the period
+    double totalCaloriesNeeded = dailyCaloriesToGainWeight * daysInPeriod;
+
+    // Estimate steps based on total calories and activity level
+    // For simplicity, we assume a linear relationship between calories and steps
+    // We'll use a rough estimate where 1 step burns about 0.04 calories (this can vary widely)
+    double caloriesPerStep = 0.04;
+    int totalStepsNeeded = (totalCaloriesNeeded / caloriesPerStep).round();
+
+    // Calculate daily steps needed
+    int dailyStepsNeeded = (totalStepsNeeded / daysInPeriod).round();
+
+    return dailyStepsNeeded;
+  }
 
 
 }
